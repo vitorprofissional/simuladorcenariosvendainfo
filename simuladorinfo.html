@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Cenários para Infoprodutos com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        ::placeholder {
+            color: #6b7280;
+        }
+        .custom-focus:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #4f46e5;
+            border-color: #4f46e5;
+        }
+        .table-cell {
+            padding: 0.75rem;
+            text-align: right;
+        }
+        .table-header {
+            padding: 0.75rem;
+            text-align: right;
+            font-weight: 600;
+        }
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-white">Simulador de Cenários para Infoprodutos</h1>
+            <p class="text-gray-400 mt-2">Simule seus resultados e obtenha uma análise estratégica com Inteligência Artificial.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+
+            <!-- Coluna Esquerda: Entradas e Métricas -->
+            <div class="lg:col-span-2 flex flex-col gap-8">
+                
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4 text-indigo-400 border-b border-gray-700 pb-2">1. Parâmetros Principais</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="precoProduto" class="block text-sm font-medium text-gray-300 mb-1">Preço do Produto (R$)</label>
+                            <input type="number" id="precoProduto" value="97" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white custom-focus">
+                            <p id="precoError" class="text-red-400 text-xs mt-1 h-4"></p>
+                        </div>
+                        <div>
+                            <label for="margemContribuicao" class="block text-sm font-medium text-gray-300 mb-1">Margem de Contribuição (%)</label>
+                            <input type="number" id="margemContribuicao" value="85" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white custom-focus">
+                            <p id="margemError" class="text-red-400 text-xs mt-1 h-4"></p>
+                        </div>
+                        <div>
+                            <label for="orcamentoDiario" class="block text-sm font-medium text-gray-300 mb-1">Orçamento Diário de Tráfego (R$)</label>
+                            <input type="number" id="orcamentoDiario" placeholder="Seu investimento diário" value="50" class="w-full bg-gray-700 border border-gray-600 rounded-md p-2 text-white custom-focus">
+                             <p id="orcamentoError" class="text-red-400 text-xs mt-1 h-4"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-bold mb-4 text-indigo-400 border-b border-gray-700 pb-2">2. Métrica por Venda</h2>
+                    <div class="space-y-3 text-gray-300">
+                        <div class="flex justify-between items-center"><span>Lucro Bruto por Venda:</span><span id="lucroBrutoVenda" class="font-bold text-lg text-white">R$ 0,00</span></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Coluna Direita: Projeções de Cenários -->
+            <div class="lg:col-span-3 flex flex-col gap-8">
+                
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                     <h2 class="text-xl font-bold mb-4 text-indigo-400 border-b border-gray-700 pb-2">3. Simulação de Cenários</h2>
+                     
+                     <!-- Cenário Otimista -->
+                     <div id="cenarioOtimista" class="mb-6">
+                        <h3 class="font-bold text-lg text-green-400 mb-2">✅ Cenário Otimista (2 Vendas/Dia)</h3>
+                        <table class="w-full text-sm mb-3">
+                            <thead class="bg-gray-700/50">
+                                <tr>
+                                    <th class="table-header text-left">Métrica</th>
+                                    <th class="table-header">Diário</th>
+                                    <th class="table-header">Em 7 Dias</th>
+                                    <th class="table-header">Em 30 Dias</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-gray-700"><td class="table-cell text-left font-medium">Faturamento Bruto</td><td id="fatDiario_otimista" class="table-cell font-mono">—</td><td id="fat7d_otimista" class="table-cell font-mono">—</td><td id="fat30d_otimista" class="table-cell font-mono">—</td></tr>
+                                <tr class="border-b border-gray-700"><td class="table-cell text-left font-medium">Investimento em Tráfego</td><td id="invDiario_otimista" class="table-cell font-mono">—</td><td id="inv7d_otimista" class="table-cell font-mono">—</td><td id="inv30d_otimista" class="table-cell font-mono">—</td></tr>
+                                <tr><td class="table-cell text-left font-bold text-white">Lucro Líquido</td><td id="lucroDiario_otimista" class="table-cell font-mono font-bold text-white">—</td><td id="lucro7d_otimista" class="table-cell font-mono font-bold text-white">—</td><td id="lucro30d_otimista" class="table-cell font-mono font-bold text-white">—</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="text-xs text-gray-400"><strong>➡️ Próxima Ação:</strong> Excelente! Aumente o orçamento gradualmente para escalar seus lucros.</p>
+                     </div>
+
+                     <!-- Cenário de Equilíbrio -->
+                     <div id="cenarioEquilibrio" class="mb-6">
+                        <h3 class="font-bold text-lg text-cyan-400 mb-2">⚖️ Cenário de Equilíbrio (1 Venda/Dia)</h3>
+                        <table class="w-full text-sm mb-3">
+                            <thead class="bg-gray-700/50">
+                                <tr>
+                                    <th class="table-header text-left">Métrica</th>
+                                    <th class="table-header">Diário</th>
+                                    <th class="table-header">Em 7 Dias</th>
+                                    <th class="table-header">Em 30 Dias</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-gray-700"><td class="table-cell text-left font-medium">Faturamento Bruto</td><td id="fatDiario_equilibrio" class="table-cell font-mono">—</td><td id="fat7d_equilibrio" class="table-cell font-mono">—</td><td id="fat30d_equilibrio" class="table-cell font-mono">—</td></tr>
+                                <tr class="border-b border-gray-700"><td class="table-cell text-left font-medium">Investimento em Tráfego</td><td id="invDiario_equilibrio" class="table-cell font-mono">—</td><td id="inv7d_equilibrio" class="table-cell font-mono">—</td><td id="inv30d_equilibrio" class="table-cell font-mono">—</td></tr>
+                                <tr><td class="table-cell text-left font-bold text-white">Lucro Líquido</td><td id="lucroDiario_equilibrio" class="table-cell font-mono font-bold text-white">—</td><td id="lucro7d_equilibrio" class="table-cell font-mono font-bold text-white">—</td><td id="lucro30d_equilibrio" class="table-cell font-mono font-bold text-white">—</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="text-xs text-gray-400"><strong>➡️ Próxima Ação:</strong> Mantenha para validar a oferta. Otimize criativos e público para baixar o custo por venda e aumentar o lucro.</p>
+                     </div>
+
+                     <!-- Cenário Pessimista -->
+                     <div id="cenarioPessimista">
+                        <h3 class="font-bold text-lg text-red-400 mb-2">❌ Cenário Pessimista (0 Vendas/Dia)</h3>
+                        <table class="w-full text-sm mb-3">
+                            <thead class="bg-gray-700/50">
+                                <tr>
+                                    <th class="table-header text-left">Métrica</th>
+                                    <th class="table-header">Diário</th>
+                                    <th class="table-header">Em 7 Dias</th>
+                                    <th class="table-header">Em 30 Dias</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300">
+                                <tr class="border-b border-gray-700"><td class="table-cell text-left font-medium">Faturamento Bruto</td><td id="fatDiario_pessimista" class="table-cell font-mono">—</td><td id="fat7d_pessimista" class="table-cell font-mono">—</td><td id="fat30d_pessimista" class="table-cell font-mono">—</td></tr>
+                                <tr class="border-b border-gray-700"><td class="table-cell text-left font-medium">Investimento em Tráfego</td><td id="invDiario_pessimista" class="table-cell font-mono">—</td><td id="inv7d_pessimista" class="table-cell font-mono">—</td><td id="inv30d_pessimista" class="table-cell font-mono">—</td></tr>
+                                <tr><td class="table-cell text-left font-bold text-white">Lucro Líquido (Prejuízo)</td><td id="lucroDiario_pessimista" class="table-cell font-mono font-bold text-white">—</td><td id="lucro7d_pessimista" class="table-cell font-mono font-bold text-white">—</td><td id="lucro30d_pessimista" class="table-cell font-mono font-bold text-white">—</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="text-xs text-gray-400"><strong>➡️ Próxima Ação:</strong> Pause a campanha imediatamente. Revise sua oferta, página, criativos e público.</p>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Análise com IA -->
+        <div class="mt-8 bg-gray-800 p-6 rounded-xl shadow-lg">
+            <h2 class="text-xl font-bold mb-4 text-indigo-400">4. Análise com IA</h2>
+            <button id="analiseIaButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-colors">
+                ✨ Analisar Cenários com IA
+            </button>
+            <div id="loader" class="hidden text-center p-8">
+                <span class="loader"></span>
+                <p class="mt-4 text-gray-400">Analisando... Isso pode levar alguns segundos.</p>
+            </div>
+            <div id="aiAnalysisResult" class="hidden mt-6 space-y-6">
+                <!-- O resultado da IA será inserido aqui -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Store calculated data globally to be accessible by the AI function
+        let calculatedData = {};
+
+        const inputs = {
+            precoProduto: document.getElementById('precoProduto'),
+            margemContribuicao: document.getElementById('margemContribuicao'),
+            orcamentoDiario: document.getElementById('orcamentoDiario'),
+        };
+
+        const errorMessages = {
+            precoError: document.getElementById('precoError'),
+            margemError: document.getElementById('margemError'),
+            orcamentoError: document.getElementById('orcamentoError'),
+        };
+        
+        const aiButton = document.getElementById('analiseIaButton');
+        const aiLoader = document.getElementById('loader');
+        const aiResultContainer = document.getElementById('aiAnalysisResult');
+
+        function formatCurrency(value, withSpan = true) {
+            if (isNaN(value) || value === null) return "—";
+            if (!withSpan) return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            const colorClass = value < 0 ? 'text-red-400' : 'text-white';
+            return `<span class="${colorClass}">${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>`;
+        }
+
+        function calculate() {
+            Object.values(errorMessages).forEach(el => el.textContent = '');
+            let hasError = false;
+
+            const preco = parseFloat(inputs.precoProduto.value) || 0;
+            if (preco <= 0) {
+                errorMessages.precoError.textContent = 'Preço deve ser > 0.';
+                hasError = true;
+            }
+            const margem = parseFloat(inputs.margemContribuicao.value) || 0;
+            if (margem < 1 || margem > 100) {
+                errorMessages.margemError.textContent = 'Margem deve ser entre 1% e 100%.';
+                hasError = true;
+            }
+            const orcamentoDiario = parseFloat(inputs.orcamentoDiario.value) || 0;
+            if (orcamentoDiario < 0) {
+                errorMessages.orcamentoError.textContent = 'Orçamento não pode ser negativo.';
+                hasError = true;
+            }
+
+            if (hasError) {
+                calculatedData = {}; // Clear data if error
+                return;
+            }
+
+            const lucroBruto = preco * (margem / 100);
+            document.getElementById('lucroBrutoVenda').innerHTML = formatCurrency(lucroBruto);
+            
+            calculatedData.parametros = {
+                precoProduto: formatCurrency(preco, false),
+                margemContribuicao: `${margem}%`,
+                orcamentoDiario: formatCurrency(orcamentoDiario, false),
+                lucroBrutoPorVenda: formatCurrency(lucroBruto, false),
+            };
+            
+            calculatedData.cenarios = {};
+
+            const cenarios = [
+                { vendasDiarias: 2, prefix: 'otimista', nome: 'Otimista' },
+                { vendasDiarias: 1, prefix: 'equilibrio', nome: 'Equilíbrio' },
+                { vendasDiarias: 0, prefix: 'pessimista', nome: 'Pessimista' }
+            ];
+
+            cenarios.forEach(cenario => {
+                const { vendasDiarias, prefix, nome } = cenario;
+
+                const faturamentoDiario = vendasDiarias * preco;
+                const lucroBrutoTotalDiario = vendasDiarias * lucroBruto;
+                const lucroLiquidoDiario = lucroBrutoTotalDiario - orcamentoDiario;
+                const lucroLiquido30d = lucroLiquidoDiario * 30;
+
+                // Update UI
+                document.getElementById(`fatDiario_${prefix}`).innerHTML = formatCurrency(faturamentoDiario);
+                document.getElementById(`invDiario_${prefix}`).innerHTML = formatCurrency(orcamentoDiario);
+                document.getElementById(`lucroDiario_${prefix}`).innerHTML = formatCurrency(lucroLiquidoDiario);
+                document.getElementById(`fat7d_${prefix}`).innerHTML = formatCurrency(faturamentoDiario * 7);
+                document.getElementById(`inv7d_${prefix}`).innerHTML = formatCurrency(orcamentoDiario * 7);
+                document.getElementById(`lucro7d_${prefix}`).innerHTML = formatCurrency(lucroLiquidoDiario * 7);
+                document.getElementById(`fat30d_${prefix}`).innerHTML = formatCurrency(faturamentoDiario * 30);
+                document.getElementById(`inv30d_${prefix}`).innerHTML = formatCurrency(orcamentoDiario * 30);
+                document.getElementById(`lucro30d_${prefix}`).innerHTML = formatCurrency(lucroLiquido30d);
+                
+                // Store for AI
+                calculatedData.cenarios[nome] = {
+                    vendasPorDia: vendasDiarias,
+                    lucroLiquidoMensal: formatCurrency(lucroLiquido30d, false)
+                };
+            });
+        }
+
+        async function getAiAnalysis() {
+            if (Object.keys(calculatedData).length === 0 || !calculatedData.parametros) {
+                alert("Por favor, preencha os parâmetros corretamente antes de pedir a análise.");
+                return;
+            }
+            
+            aiButton.classList.add('hidden');
+            aiLoader.classList.remove('hidden');
+            aiResultContainer.classList.add('hidden');
+
+            const prompt = `
+                Você é um especialista em marketing digital e tráfego pago para infoprodutos.
+                Analise os seguintes dados de uma simulação de campanha e forneça insights estratégicos.
+
+                **Parâmetros do Produto:**
+                - Preço de Venda: ${calculatedData.parametros.precoProduto}
+                - Margem de Contribuição: ${calculatedData.parametros.margemContribuicao}
+                - Lucro Bruto por Venda: ${calculatedData.parametros.lucroBrutoPorVenda}
+                - Orçamento Diário de Tráfego: ${calculatedData.parametros.orcamentoDiario}
+
+                **Cenários Simulados (Projeção de Lucro Líquido em 30 dias):**
+                - Cenário Otimista (2 vendas/dia): ${calculatedData.cenarios.Otimista.lucroLiquidoMensal}
+                - Cenário de Equilíbrio (1 venda/dia): ${calculatedData.cenarios.Equilíbrio.lucroLiquidoMensal}
+                - Cenário Pessimista (0 vendas/dia): ${calculatedData.cenarios.Pessimista.lucroLiquidoMensal}
+
+                Baseado nesses dados, forneça uma análise concisa no seguinte formato JSON. Seja direto e prático nas recomendações.
+
+                {
+                  "positive_points": "Uma lista com 2 a 3 pontos positivos ou oportunidades chave observadas nos dados.",
+                  "risks": "Uma lista com 2 a 3 riscos principais ou pontos de atenção.",
+                  "recommendations": "Uma lista com 3 a 4 recomendações estratégicas e acionáveis para o usuário, focando em como melhorar os resultados, otimizar a oferta, criativos e público-alvo."
+                }
+            `;
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                const payload = { contents: chatHistory };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    
+                    const text = result.candidates[0].content.parts[0].text;
+                    // Clean the response to ensure it's valid JSON
+                    const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const analysis = JSON.parse(cleanedText);
+                    displayAiAnalysis(analysis);
+
+                } else {
+                   throw new Error("Resposta da API inválida ou vazia.");
+                }
+
+            } catch (error) {
+                console.error("Erro ao chamar a API Gemini:", error);
+                aiResultContainer.innerHTML = `<div class="text-red-400 text-center">Ocorreu um erro ao buscar a análise. Por favor, tente novamente.</div>`;
+            } finally {
+                aiLoader.classList.add('hidden');
+                aiResultContainer.classList.remove('hidden');
+                aiButton.classList.remove('hidden');
+            }
+        }
+
+        function displayAiAnalysis(analysis) {
+            const { positive_points, risks, recommendations } = analysis;
+
+            const createList = (items) => {
+                if (typeof items === 'string') {
+                    // If it's a single string with newlines, split it
+                    items = items.split('\n').filter(item => item.trim() !== '');
+                }
+                return items.map(item => `<li class="flex items-start"><span class="mr-2 mt-1 text-indigo-400">▶</span><span>${item.replace(/^- /, '')}</span></li>`).join('');
+            };
+
+            aiResultContainer.innerHTML = `
+                <div class="bg-gray-700/50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-lg text-green-400 mb-2">Pontos Positivos e Oportunidades</h4>
+                    <ul class="space-y-2 text-gray-300">${createList(positive_points)}</ul>
+                </div>
+                <div class="bg-gray-700/50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-lg text-yellow-400 mb-2">Riscos e Pontos de Atenção</h4>
+                    <ul class="space-y-2 text-gray-300">${createList(risks)}</ul>
+                </div>
+                <div class="bg-gray-700/50 p-4 rounded-lg">
+                    <h4 class="font-semibold text-lg text-cyan-400 mb-2">Recomendações Estratégicas</h4>
+                    <ul class="space-y-2 text-gray-300">${createList(recommendations)}</ul>
+                </div>
+            `;
+        }
+
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+        
+        aiButton.addEventListener('click', getAiAnalysis);
+
+        window.onload = calculate;
+    </script>
+</body>
+</html>
